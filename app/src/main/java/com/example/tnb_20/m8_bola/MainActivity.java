@@ -1,156 +1,130 @@
 package com.example.tnb_20.m8_bola;
 
-
-import android.content.Context;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
-import android.view.MotionEvent;
 import android.widget.ImageView;
-import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity implements SensorEventListener {
-    SensorManager sensorMgr;
-    Sensor sensor;
-    ImageView img;
+import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
-    float velocitat = 2.0f;
-    float iniciX, iniciY;
+public class MainActivity extends AppCompatActivity {
+    /*
+    Funcionament del codi similar a MainActivityOld
+    que es la app amb una pilota rebotant per la pantalla
+     */
+    private ArrayList<Pilota> arrayPilotes;
+    //Nota: Serveix epr a obtenir les dimensions de la pantalla App i que no es surti la pilota
+    private int status;
+    private DisplayMetrics displayMetrics;
 
-    int statusBar, width, height;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        // La bola
-        img = (ImageView) findViewById(R.id.imageView);
+        this.displayMetrics = this.getBaseContext().getResources().getDisplayMetrics();
+        this.status = getResources().getDimensionPixelSize(getResources().getIdentifier("status_bar_height", "dimen", "android"));
 
-        // Obtenim les dimensions de la pantalla
-        DisplayMetrics display = this.getBaseContext().getResources().getDisplayMetrics();
-        width = display.widthPixels;
-        height = display.heightPixels;
+        renderitzarPilotes();
 
-        // Mida de l'statusBar per calcular l'alçada de l'aplicació
-        statusBar = getResources().getDimensionPixelSize(getResources().getIdentifier("status_bar_height", "dimen", "android"));
-        // Inicialitzem a 0 les variables per controlar les pulsacions tàctils
-        iniciX = iniciY = 0;
-        // Inicialitzem el sensor de l'acceleròmetre
-        sensorMgr = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        sensor = sensorMgr.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sensorMgr.registerListener(this, sensor, SensorManager.SENSOR_DELAY_GAME);
-    }
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        sensorMgr.unregisterListener(this);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        sensorMgr.registerListener(this, sensor, SensorManager.SENSOR_DELAY_GAME);
-    }
-
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent sensorEvent) {
-
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-
-            moveBall(sensorEvent.values[1], sensorEvent.values[0]);
-
-        }
-
-    }
-
-    private void moveBall(float x, float y) {
-        float novaPosicioX = img.getX() + x * velocitat;
-        // Coordenada x
-
-        // Si el moviment és cap a la dreta
-        if (x > 0) {
-
-            // Comprovem que no surti de les dimensions de la pantalla en assignar la nova posició
-            if (novaPosicioX + img.getWidth() <= width) {
-                img.setX(novaPosicioX);
-
+                mourePilota();
             }
-            // Si en surt, establim la posició màxima en horitzontal perquè es pugui veure la imatge.
-            else img.setX(width - img.getWidth());
-        }
+        };
+        //Refresc de la pantalla per actualitzar el moviment de les pilotes
+        Timer timer = new Timer();
+        timer.schedule(task, 100, 30);
+    }
+    private void renderitzarPilotes() {
+        arrayPilotes = new ArrayList<>();
 
-        // Fem el mateix pel moviment cap a l'esquerra
-        else {
-            if (novaPosicioX >= 0) {
-                img.setX(novaPosicioX);
+       //Pilota 1
+        Pilota bola = new Pilota();
+        bola.setDespX(20.0);
+        bola.setDespY(20.0);
+        bola.setX(4);
+        bola.setY(4);
+        bola.setPilota((ImageView) findViewById(R.id.pilota1));
+        bola.setAmple(this.displayMetrics.widthPixels);
+        bola.setAlt(this.displayMetrics.heightPixels);
 
-            } else img.setX(0);
+        //Pilota2
+        Pilota bola2 = new Pilota();
+        bola2.setDespX(8.0);
+        bola2.setDespY(8.0);
+        bola2.setX(2);
+        bola2.setY(2);
+        bola2.setPilota((ImageView) findViewById(R.id.pilota1));
+        bola2.setAmple(this.displayMetrics.widthPixels);
+        bola2.setAlt(this.displayMetrics.heightPixels);
 
-        }
-        // Coordenada y
-
-        float novaPosicioY = img.getY() + y * velocitat;
-
-        // El concepte és el mateix que a la X però hem de tenir en compte la barra d'estat
-
-        if (y > 0)
-            if (novaPosicioY + img.getHeight() + statusBar <= height) {
-                img.setY(novaPosicioY);
-
-            } else img.setY(height - img.getHeight() - statusBar);
-        else {
-            if (novaPosicioY >= 0) {
-                img.setY(novaPosicioY);
-
-            } else img.setY(0);
-
-        }
+        arrayPilotes.add(bola);
+        arrayPilotes.add(bola2);
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
+    private void mourePilota() {
+        for (Pilota pilota: arrayPilotes) {
+            double positionX = pilota.getX() + (pilota.getX() * pilota.getDespX());
+            double positionY = pilota.getY() + (pilota.getY() * pilota.getDespY());
 
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+    compPosX(pilota, positionX);
+    compPosY(pilota, positionY);
 
-            // Registrem l'event al TextView
-            iniciX = event.getX();
-            iniciY = event.getY();
-
-
-        } else if (event.getAction() == MotionEvent.ACTION_UP) {
-
-            // Registrem l'event al TextView
-            float finalX = event.getX();
-            float finalY = event.getY();
-
-            //Comrpovem si el moviment ha estat vertical
-            if (Math.abs(finalX - iniciX) < Math.abs(finalY - iniciY)) {
-
-                // Establim el límit inferior en 0.5f
-                if (finalY > iniciY) {
-                    if (velocitat > 0.5)
-                        velocitat -= 0.5f;
-                    // Establim el límit superior en 5.0f
-                } else {
-                    if (velocitat < 5.0)
-                        velocitat += 0.5f;
-                }
-                Toast.makeText(this, "Velocitat: " + String.valueOf(velocitat), Toast.LENGTH_SHORT).show();
-
-            }
-        }
-        return super.onTouchEvent(event);
+    calcularPosCreuament();
+}
     }
+
+private void calcularPosCreuament(){
+        // Calculem la nova posicio a la que es desplaçaran les pilotes a rao de invertir el eix x i y per simular que xoquen (faltarien variables de pes per a mes realisme)
+        if(arrayPilotes.get(0).getX() >= arrayPilotes.get(1).getX() || arrayPilotes.get(0).getX() <= arrayPilotes.get(1).getX() + arrayPilotes.get(1).getAmple()){
+        arrayPilotes.get(0).setDespX(arrayPilotes.get(0).getDespX() * (-1));
+        arrayPilotes.get(1).setDespX(arrayPilotes.get(1).getDespX() * (-1));
+        }
+        }
+
+
+        //FUncions per a recalcular la posicioX i Y de la pilota
+private void compPosX(Pilota pilota, double posicioX){
+        if(pilota.getX() > 0){
+        if(posicioX + pilota.getAmple() < pilota.getAmple()){
+        pilota.setX((float) posicioX);
+        }else{
+        pilota.setX((float) pilota.getAmple() - pilota.getAmple());
+        pilota.setDespX(pilota.getDespX() * (-1));
+        }
+        }else{
+        if (posicioX > 0) {
+        pilota.setX((double) posicioX);
+        } else{
+        pilota.setX(0);
+        pilota.setDespX(pilota.getDespX() * (-1));
+        }
+        }
+        }
+
+private void compPosY(Pilota pilota, double posicioY) {
+        if (pilota.getY() > 0) {
+        if (posicioY + pilota.getAlt() + this.status < pilota.getAlt()) {
+        pilota.setY((double) posicioY);
+        } else {
+        pilota.setY((double) pilota.getAlt() - pilota.getAlt() - this.status);
+        pilota.setDespY(pilota.getDespY() * (-1));
+        }
+        } else {
+        if (posicioY > 0) {
+        pilota.setY((double) posicioY);
+        } else {
+        pilota.setY(0);
+        pilota.setDespY(pilota.getDespY() * (-1));
+        }
+        }
+        }
+
 
 }
+
