@@ -32,8 +32,11 @@ public class MainActivity extends AppCompatActivity {
         float[] posY = {ample/10*1, ample/10*2, ample/10*4, ample/10*8};
 
         //Posem una velocitat a les pilotes (Es poden posar mes velocitats
-        float[] vel = {2, -2};
+        float[] vel = {5, -5};
         arrayPilotes = new Pilota[4];//Creem un array de 4 pilotes; Falta implementar demanar per pantalla cuantes pilotes vol l'usuari
+        /*
+        Nota: Si posem +4 pilotes, la app falla al iniciarse --> Pot ser problema del movil 
+         */
         for (int i = 0; i<4 ; i++) {
             //Randomitzem la velocitat de les pilotes en els vectors X i Y
             Float tmpVelX = vel[new Random().nextInt(2)];

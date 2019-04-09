@@ -64,14 +64,18 @@ public class Pilota {
                 velY=(-1)*velY;
             }
         }
-        //Un cop recalculat entre parets, recalculem el resultat amb Colisio
-        xocPilota(x, y);
+        //Un cop recalculat entre parets, recalculem el resultat amb Colisio SI ES NECESARI --> es a dir, la pilota XOCA amb una altra pilota diferent
+       // xocPilota(x, y); Obsolet, provoca que la app es bugueji --> Sense la funcio
+        /*
+        xocPilota(x,y) provoca que es recalculi la posicio de la pilota altre vegada, donant una altra posicio incorrecte a la pilota, provocant que aquesta es surti dels marges de l'app
+        cal acabar de pulir que nomes recalculi la posicio si NOMES es necesari, es a dir, en cas de xoc amb una altra pilota --> id_pilota 1 != id_pilota_2 (dos pilotes diferents)
+         */
     }
 
     public void xocPilota(float x, float y){
         //Per evitar que colisioni amb ella mateixa, tenen que ser dos pilotes diferents, es a dir, dos pilotesId diferents
         for (Pilota Pilota : MainActivity.arrayPilotes) {
-            /*Mateixa logica anterior
+            /*Mateixa logica anterior que el recalcular posicio, a excepcio, que s'han de invertir els eixos amb el de la pilota que xoqui segons COM sigui el xoc
             SI: X>0-->Moviment cap a la dreta
             Si X < 0 --> Moviment cap a l'esquerra
             Si Y >0 --> Moviment cap a dalt
@@ -79,10 +83,11 @@ public class Pilota {
             Segons l'eix d'abcisses
              */
             //EIX DE LES X
-            if (Pilota.pilotaId!=this.pilotaId){
+            //Mirem que els id de les pilotes siguin diferents, ja que si no, xocaria entre ella continuament
+            if (Pilota.pilotaId!=this.pilotaId){//CAL PULIR EL RECONEIXEMENT DELS ID
                 float recalculPosX = this.pilotaView.getX() + x * velX;//Per obtenir la nova pos, es tan facil com pos = posX(Actual) + velX*x donat que no hi ha variable T, fem servir X
                 if (this.pilotaView.getX() < Pilota.pilotaView.getX()) {
-                    //Comprovacio per evitar que es surti de la pantalla la imatge i perdem una pilota
+                    //Comprovacio per evitar que es surti de la pantalla la imatge i perdem una pilota--> En calcularXocPilota ens dona problemes
                     if ( Pilota.pilotaView.getX()+Pilota.pilotaView.getWidth() < recalculPosX + this.pilotaView.getWidth()) {
                         this.pilotaView.setX(recalculPosX);
                     } else {
